@@ -3,120 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Archivio Scientifico Aperto</title>
+    <title>GIS PEAK | Divulgazione Scientifica</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shpjs/4.0.4/shp.min.js"></script>
+    <script src="https://unpkg.com/@ngageoint/geopackage@4.2.3/dist/geopackage.min.js"></script>
+    
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f8f9fa; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        h1 { color: var(--primary); text-align: center; border-bottom: 3px solid var(--accent); padding-bottom: 10px; }
-        .mission-box { background: #e8f4fd; border-left: 5px solid var(--accent); padding: 15px; margin-bottom: 25px; font-style: italic; }
-        .section { margin-bottom: 30px; padding: 20px; border: 1px solid #eee; border-radius: 8px; }
-        input[type="file"] { display: block; margin-bottom: 15px; width: 100%; }
-        button { background: var(--accent); color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.3s; }
-        button:hover { background: #2980b9; }
-        #status { margin-top: 15px; text-align: center; font-weight: bold; }
-        .file-list { margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px; }
-        .file-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #fafafa; font-size: 0.9em; }
-        .download-btn { width: auto; padding: 5px 10px; background: #27ae60; font-size: 0.8em; }
+        :root {
+            --neon: #00ff9d;
+            --neon-glow: rgba(0, 255, 157, 0.3);
+            --bg: #0a0c10;
+            --panel: #111418;
+            --text: #e0e0e0;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s ease; }
+        body { background-color: var(--bg); color: var(--text); font-family: 'Exo 2', sans-serif; margin: 0; overflow-x: hidden; }
+
+        .hero {
+            height: 200px;
+            background: linear-gradient(rgba(10,12,16,0.8), rgba(10,12,16,0.9)), 
+                        url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop');
+            background-size: cover; background-position: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; border-bottom: 1px solid var(--neon-glow);
+        }
+        .hero h1 { font-size: 2.5rem; letter-spacing: 5px; margin: 0; color: #fff; text-transform: uppercase; text-shadow: 0 0 15px var(--neon-glow); }
+
+        .mission-bar { background: var(--panel); color: var(--neon); padding: 10px; text-align: center; font-size: 0.8rem; border-bottom: 1px solid var(--border); letter-spacing: 1px; }
+
+        .hex-grid { display: flex; justify-content: center; gap: 20px; padding: 20px; flex-wrap: wrap; }
+        .hex-item { width: 120px; cursor: pointer; text-align: center; }
+        .hexagon {
+            width: 80px; height: 90px; background: var(--panel); margin: 0 auto;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            display: flex; align-items: center; justify-content: center; border: 1px solid var(--border);
+        }
+        .hexagon:hover { border-color: var(--neon); box-shadow: 0 0 15px var(--neon-glow); transform: scale(1.05); }
+        .hex-icon { color: var(--neon); width: 25px; height: 25px; }
+        .hex-label { margin-top: 8px; font-weight: 600; text-transform: uppercase; font-size: 0.6rem; color: var(--text); }
+
+        .dashboard { max-width: 1200px; margin: 0 auto 50px auto; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .tab-bar { display: flex; background: #0d1116; border-bottom: 1px solid var(--border); overflow-x: auto; }
+        .tab { padding: 15px 25px; cursor: pointer; font-size: 0.75rem; font-weight: bold; color: #8b949e; border-right: 1px solid var(--border); white-space: nowrap; text-transform: uppercase; }
+        .tab.active { color: var(--neon); background: var(--panel); border-bottom: 2px solid var(--neon); }
+
+        .content-area { padding: 0; display: none; min-height: 500px; }
+        .content-area.active { display: block; }
+
+        #map { height: 600px; width: 100%; background: #000; }
+        
+        .controls { padding: 15px; background: #161b22; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border); }
+        .btn-neon { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 8px 15px; cursor: pointer; font-weight: bold; text-transform: uppercase; border-radius: 4px; font-size: 0.7rem; }
+        .btn-neon:hover { background: var(--neon); color: #000; box-shadow: 0 0 15px var(--neon); }
+
+        .info-pane { padding: 40px; line-height: 1.8; }
+        footer { padding: 20px; text-align: center; border-top: 1px solid var(--border); font-size: 0.7rem; color: #666; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Divulgazione Scientifica</h1>
-    
-    <div class="mission-box">
-        <strong>Missione:</strong> Questo portale è dedicato alla condivisione di conoscenze scientifiche a scopo divulgativo e non a scopo di lucro.
+    <section class="hero">
+        <h1>GIS PEAK</h1>
+        <p>Lab Geospaziale di <strong>Valerio Callaringi</strong></p>
+    </section>
+
+    <div class="mission-bar">
+        SCOPO DI DIVULGAZIONE SCIENTIFICA • NO-PROFIT • OPEN DATA
     </div>
 
-    <div class="section">
-        <h3>Carica un Documento</h3>
-        <input type="file" id="fileInput">
-        <button onclick="uploadFile()">Salva nell'Archivio</button>
-        <div id="status"></div>
-    </div>
+    <section class="hex-grid">
+        <div class="hex-item" onclick="switchTab(null, 'view-map')">
+            <div class="hexagon"><i data-lucide="map" class="hex-icon"></i></div>
+            <div class="hex-label">GIS Engine</div>
+        </div>
+        <div class="hex-item" onclick="switchTab(null, 'view-academy')">
+            <div class="hexagon"><i data-lucide="graduation-cap" class="hex-icon"></i></div>
+            <div class="hex-label">Academy</div>
+        </div>
+        <div class="hex-item" onclick="switchTab(null, 'view-forum')">
+            <div class="hexagon"><i data-lucide="message-square" class="hex-icon"></i></div>
+            <div class="hex-label">Forum</div>
+        </div>
+        <div class="hex-item" onclick="switchTab(null, 'view-mission')">
+            <div class="hexagon"><i data-lucide="target" class="hex-icon"></i></div>
+            <div class="hex-label">Missione</div>
+        </div>
+    </section>
 
-    <div class="section">
-        <h3>Documenti Disponibili</h3>
-        <div id="fileList" class="file-list">
+    <div class="dashboard">
+        <div class="tab-bar">
+            <div id="tab-map" class="tab active" onclick="switchTab(event, 'view-map')">Mappa Live</div>
+            <div id="tab-academy" class="tab" onclick="switchTab(event, 'view-academy')">Academy</div>
+            <div id="tab-forum" class="tab" onclick="switchTab(event, 'view-forum')">Forum</div>
+            <div id="tab-mission" class="tab" onclick="switchTab(event, 'view-mission')">Missione</div>
+            <div id="tab-info" class="tab" onclick="switchTab(event, 'view-info')">Contatti</div>
+        </div>
+
+        <div id="view-map" class="content-area active">
+            <div class="controls">
+                <div>
+                    <span style="font-size:0.7rem; color:var(--neon); font-weight: bold; margin-right:10px;">CARICA DATI (ZIP/GPKG/JSON):</span>
+                    <input type="file" id="fileInput" accept=".geojson,.json,.zip,.gpkg" style="font-size: 0.7rem; color: white; width: auto; background: transparent; border: none;">
+                </div>
+                <button onclick="saveToCloud()" class="btn-neon">💾 PUBBLICA SCIENZA</button>
             </div>
+            <div id="map"></div>
+        </div>
+
+        <div id="view-academy" class="content-area info-pane">
+            <h2 style="color:var(--neon)">GIS Academy</h2>
+            <p>Sezione dedicata alla formazione geospaziale no-profit. Qui trovi manuali su:</p>
+            <ul>
+                <li>Gestione Database PostGIS</li>
+                <li>Cartografia con QGIS</li>
+                <li>Analisi Python per la Scienza della Terra</li>
+            </ul>
+        </div>
+
+        <div id="view-forum" class="content-area info-pane">
+            <h2 style="color:var(--neon)">Forum Scientifico</h2>
+            <div id="disqus_thread"></div>
+        </div>
+
+        <div id="view-mission" class="content-area info-pane">
+            <h2 style="color:var(--neon)">La Nostra Missione</h2>
+            <p><strong>GIS PEAK</strong> è un progetto finalizzato alla <strong>divulgazione scientifica</strong> senza alcuno scopo di lucro.</p>
+            <p>L'obiettivo è fornire strumenti GIS professionali a ricercatori e appassionati per mappare, analizzare e rendere eterni i dati geografici del nostro pianeta.</p>
+        </div>
+
+        <div id="view-info" class="content-area info-pane">
+            <h2 style="color:var(--neon)">Contatti</h2>
+            <p>Scrivi a: <strong>callaringivalerio@gmail.com</strong></p>
+            <input type="text" placeholder="Oggetto">
+            <textarea placeholder="Tuo messaggio scientifico..."></textarea>
+            <button class="btn-neon">Invia Comunicazione</button>
+        </div>
     </div>
-</div>
 
-<script>
-    // Configurazione Supabase
-    const SB_URL = "https://nygybfkstkevlfkmaqxa.supabase.co";
-    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55Z3liZmtzdGtldmxma21hcXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY3NDUxMTAsImV4cCI6MjA4MjMyMTExMH0.aMvF_FneySS0-84Ts7VQlnoivfmUPUO4s8o-AK4KTJU";
+    <footer>
+        <p>© 2025 GIS PEAK | Divulgazione Scientifica No-Profit | Dev: Valerio Callaringi</p>
+    </footer>
 
-    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // CONFIGURAZIONE SUPABASE AGGIORNATA
+        const _URL = "https://nygybfkstkevlfkmaqxa.supabase.co";
+        const _KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55Z3liZmtzdGtldmxma21hcXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY3NDUxMTAsImV4cCI6MjA4MjMyMTExMH0.aMvF_FneySS0-84Ts7VQlnoivfmUPUO4s8o-AK4KTJU";
+        const _supabase = supabase.createClient(_URL, _KEY);
+        const ADMIN_PASS = "Valerio_1991";
 
-    // 1. Funzione per Caricare i File
-    async function uploadFile() {
-        const fileInput = document.getElementById('fileInput');
-        const status = document.getElementById('status');
-        const file = fileInput.files[0];
-
-        if (!file) {
-            status.innerHTML = "❌ Seleziona un file.";
-            return;
-        }
-
-        status.style.color = "blue";
-        status.innerHTML = "⏳ Caricamento in corso...";
-
-        const fileName = `${Date.now()}_${file.name}`;
-
-        const { data, error } = await supabaseClient.storage
-            .from('scienza')
-            .upload(fileName, file);
-
-        if (error) {
-            console.error(error);
-            status.style.color = "red";
-            status.innerHTML = "❌ Errore: " + error.message;
-        } else {
-            status.style.color = "green";
-            status.innerHTML = "✅ File salvato con successo!";
-            fileInput.value = ""; // Reset input
-            loadFiles(); // Ricarica la lista
-        }
-    }
-
-    // 2. Funzione per Elencare i File
-    async function loadFiles() {
-        const fileListDiv = document.getElementById('fileList');
+        lucide.createIcons();
         
-        const { data, error } = await supabaseClient.storage
-            .from('scienza')
-            .list('', { limit: 20, sortBy: { column: 'created_at', order: 'desc' } });
+        // Setup Mappa
+        const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
+        const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{y}/{x}.png');
+        const map = L.map('map', { center: [41.9, 12.5], zoom: 6, layers: [satellite] });
 
-        if (error) {
-            fileListDiv.innerHTML = "Errore nel caricamento dei file.";
-            return;
+        const layerControl = L.control.layers({ "Satellite": satellite, "OSM": osm }, {}, { collapsed: false }).addTo(map);
+
+        let tempLayerData = null;
+        let tempFileName = "";
+
+        // Inizializzazione Dati dal Cloud
+        async function loadLayers() {
+            const { data, error } = await _supabase.from('layers').select('*');
+            if (data) {
+                data.forEach(item => {
+                    const l = L.geoJSON(item.data, {
+                        style: { color: '#00ff9d', weight: 2, fillOpacity: 0.3 },
+                        onEachFeature: (f, layer) => {
+                            layer.bindPopup(`<b>Dato Scientifico:</b> ${item.name}`);
+                        }
+                    }).addTo(map);
+                    layerControl.addOverlay(l, `🌍 ${item.name}`);
+                });
+            }
+        }
+        loadLayers();
+
+        // Logica File Multi-formato
+        document.getElementById('fileInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            tempFileName = file.name;
+
+            if (file.name.endsWith('.gpkg')) {
+                const buffer = await file.arrayBuffer();
+                const gp = await window.geopackage.GeoPackageConnection.connectWithUint8Array(new Uint8Array(buffer));
+                const tables = await gp.getFeatureTables();
+                tempLayerData = await gp.getFeaturesFromFeatureTable(tables[0]);
+                renderPreview();
+            } else if (file.name.endsWith('.zip')) {
+                const reader = new FileReader();
+                reader.onload = async (ev) => {
+                    tempLayerData = await shp(ev.target.result);
+                    renderPreview();
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    tempLayerData = JSON.parse(ev.target.result);
+                    renderPreview();
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function renderPreview() {
+            const p = L.geoJSON(tempLayerData, { style: { color: '#ff00ff', weight: 3 } }).addTo(map);
+            layerControl.addOverlay(p, `Anteprima: ${tempFileName}`);
+            map.fitBounds(p.getBounds());
+            alert("File analizzato correttamente. Ora puoi pubblicarlo.");
         }
 
-        fileListDiv.innerHTML = "";
-        data.forEach(file => {
-            if (file.name === '.emptyFolderPlaceholder') return;
+        async function saveToCloud() {
+            if (!tempLayerData) return alert("Nessun dato da caricare!");
+            const pass = prompt("Inserisci Password Admin per caricamento scientifico:");
+            if (pass !== ADMIN_PASS) return alert("Accesso negato.");
 
-            const item = document.createElement('div');
-            item.className = 'file-item';
+            const { error } = await _supabase.from('layers').insert([{ name: tempFileName, data: tempLayerData }]);
+            if (error) alert("Errore: " + error.message);
+            else location.reload();
+        }
+
+        // Navigazione Tab
+        function switchTab(e, viewId) {
+            document.querySelectorAll('.content-area').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
             
-            // Genera URL pubblico per il download
-            const { data: urlData } = supabaseClient.storage.from('scienza').getPublicUrl(file.name);
+            const tabId = 'tab-' + viewId.split('-')[1];
+            if(document.getElementById(tabId)) document.getElementById(tabId).classList.add('active');
+            if(viewId === 'view-map') setTimeout(() => map.invalidateSize(), 200);
+        }
 
-            item.innerHTML = `
-                <span>${file.name}</span>
-                <button class="download-btn" onclick="window.open('${urlData.publicUrl}', '_blank')">Apri/Scarica</button>
-            `;
-            fileListDiv.appendChild(item);
-        });
-    }
-
-    // Carica la lista all'apertura della pagina
-    loadFiles();
-</script>
-
+        // Disqus Integration
+        (function() {
+            var d = document, s = d.createElement('script');
+            s.src = 'https://gis-peak-valerio.disqus.com/embed.js';
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+        })();
+    </script>
 </body>
 </html>
