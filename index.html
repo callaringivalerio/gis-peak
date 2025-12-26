@@ -3,183 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GIS PEAK | Valerio Callaringi</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
+    <title>Archivio Scientifico Open Source</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/shpjs/4.0.4/shp.min.js"></script>
-    <script src="https://unpkg.com/@ngageoint/geopackage@4.2.3/dist/geopackage.min.js"></script>
-    
     <style>
-        :root {
-            --neon: #00ff9d;
-            --bg: #0a0c10;
-            --panel: #111418;
-            --text: #e0e0e0;
-            --border: rgba(255, 255, 255, 0.1);
-        }
-
-        body { background-color: var(--bg); color: var(--text); font-family: 'Exo 2', sans-serif; margin: 0; }
-
-        .header {
-            padding: 20px;
-            background: linear-gradient(to bottom, #111, var(--bg));
-            text-align: center;
-            border-bottom: 1px solid var(--neon);
-        }
-
-        .dashboard { max-width: 1200px; margin: 20px auto; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-        
-        .controls {
-            padding: 15px;
-            background: #161b22;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-            border-bottom: 1px solid var(--border);
-        }
-
-        #map { height: 600px; width: 100%; background: #000; }
-
-        .btn-neon {
-            background: transparent; border: 1px solid var(--neon); color: var(--neon);
-            padding: 8px 15px; cursor: pointer; font-weight: bold; text-transform: uppercase; border-radius: 4px;
-        }
-        .btn-neon:hover { background: var(--neon); color: #000; }
-
-        .mission-section { padding: 30px; border-top: 1px solid var(--border); background: #0d1116; }
-
-        input[type="file"] { color: #8b949e; font-size: 0.8rem; }
-        
-        .leaflet-popup-content b { color: var(--neon); }
-        .popup-btn { background: #333; color: white; border: none; padding: 5px; margin: 2px; cursor: pointer; width: 100%; border-radius: 3px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f7f6; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .disclaimer { font-size: 0.8em; color: #7f8c8d; margin-bottom: 20px; font-style: italic; }
+        .section { margin-bottom: 30px; padding: 15px; border: 1px solid #ecf0f1; border-radius: 5px; }
+        input[type="file"] { margin-bottom: 10px; }
+        button { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #2980b9; }
+        #status { margin-top: 10px; font-weight: bold; }
+        .file-list { list-style: none; padding: 0; }
+        .file-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1 style="letter-spacing: 5px; margin: 0;">GIS PEAK</h1>
-        <p>Laboratorio Geologico di Valerio Callaringi</p>
+<div class="container">
+    <h1>Divulgazione Scientifica No-Profit</h1>
+    <p class="disclaimer">Questo portale ha scopo puramente divulgativo e non persegue fini di lucro.</p>
+
+    <div class="section">
+        <h3>Carica Documento Scientifico</h3>
+        <input type="file" id="fileInput" />
+        <button onclick="uploadFile()">Invia al Database</button>
+        <div id="status"></div>
     </div>
 
-    <div class="dashboard">
-        <div class="controls">
-            <div style="display: flex; flex-direction: column;">
-                <label style="font-size: 0.7rem; color: var(--neon);">CARICA FILE (.GPKG, .ZIP, .JSON)</label>
-                <input type="file" id="fileInput">
-            </div>
-            <div style="display: flex; flex-direction: column;">
-                <label style="font-size: 0.7rem; color: var(--neon);">COLORE LAYER</label>
-                <input type="color" id="colorPicker" value="#00ff9d" style="height: 35px; border: none; background: none; cursor: pointer;">
-            </div>
-            <button onclick="saveToCloud()" class="btn-neon" style="margin-top: 15px;">💾 PUBBLICA SUL DATABASE</button>
-        </div>
-
-        <div id="map"></div>
-
-        <div class="mission-section">
-            <h3 style="color: var(--neon); margin-top: 0;">MISSIONE DEL PROGETTO</h3>
-            <p>Questo portale è dedicato alla visualizzazione e archiviazione di dati geospaziali relativi alla tettonica e alla geologia regionale.</p>
-            <p style="border-left: 3px solid var(--neon); padding-left: 15px; font-style: italic;">
-                "La missione di questo progetto è esclusivamente a scopo di <strong>divulgazione scientifica</strong> e assolutamente <strong>non a scopo di lucro</strong>."
-            </p>
-        </div>
+    <div class="section">
+        <h3>File Disponibili</h3>
+        <ul id="fileList" class="file-list">
+            </ul>
     </div>
+</div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        // --- CONFIGURAZIONE DATABASE (INSERITA) ---
-        const SB_URL = "https://nygybfkstkevlfkmaqxa.supabase.co";
-        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55Z3liZmtzdGtldmxma21hcXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUyMzA3MDMsImV4cCI6MjA1MDgwNjcwM30.q77k26I5Y0B77O7fR977O7fR977O7fR977O7fR977O7fR977O7fR9";
-        const _supabase = supabase.createClient(SB_URL, SB_KEY);
-        const ADMIN_PASS = "Valerio_1991";
+<script>
+    // Configurazione Supabase con le tue credenziali
+    const SUPABASE_URL = "https://nygybfkstkevlfkmaqxa.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55Z3liZmtzdGtldmxma21hcXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY3NDUxMTAsImV4cCI6MjA4MjMyMTExMH0.aMvF_FneySS0-84Ts7VQlnoivfmUPUO4s8o-AK4KTJU";
+    
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        lucide.createIcons();
+    // Funzione per caricare i file
+    async function uploadFile() {
+        const fileInput = document.getElementById('fileInput');
+        const status = document.getElementById('status');
+        const file = fileInput.files[0];
 
-        // Inizializza Mappa
-        const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
-        const map = L.map('map', { center: [41.83, 13.33], zoom: 12, layers: [satellite] });
-        const layerControl = L.control.layers({ "Satellite": satellite }, {}, { collapsed: false }).addTo(map);
-
-        let tempLayer = null;
-        let tempData = null;
-        let tempName = "";
-
-        // 1. CARICA LAYER DAL CLOUD
-        async function loadLayers() {
-            const { data, error } = await _supabase.from('layers').select('*');
-            if (data) {
-                data.forEach(item => {
-                    const l = L.geoJSON(item.data, {
-                        style: { color: item.color || '#00ff9d', weight: 2, fillOpacity: 0.3 },
-                        onEachFeature: (f, layer) => {
-                            layer.bindPopup(`
-                                <b>Layer: ${item.name}</b><br>
-                                <button class="popup-btn" onclick="map.fitBounds(this.options.layer.getBounds())">🔍 ZOOM QUI</button>
-                                <button class="popup-btn" style="background:#800;" onclick="deleteLayer('${item.id}')">🗑️ ELIMINA</button>
-                            `);
-                            layer.getPopup().options.layer = layer;
-                        }
-                    }).addTo(map);
-                    layerControl.addOverlay(l, "🌍 " + item.name);
-                });
-            }
+        if (!file) {
+            status.innerText = "Seleziona prima un file.";
+            return;
         }
-        loadLayers();
 
-        // 2. GESTIONE IMPORTAZIONE FILE
-        document.getElementById('fileInput').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            tempName = file.name;
-            const color = document.getElementById('colorPicker').value;
+        status.innerText = "Caricamento in corso...";
 
-            if (file.name.endsWith('.gpkg')) {
-                const buffer = await file.arrayBuffer();
-                const gp = await window.geopackage.GeoPackageConnection.connectWithUint8Array(new Uint8Array(buffer));
-                const tables = await gp.getFeatureTables();
-                tempData = await gp.getFeaturesFromFeatureTable(tables[0]);
-            } else if (file.name.endsWith('.zip')) {
-                tempData = await shp(await file.arrayBuffer());
-            } else {
-                tempData = JSON.parse(await file.text());
-            }
+        // NOTA: Assicurati di aver creato un bucket chiamato 'scienza' su Supabase
+        const filePath = `uploads/${Date.now()}_${file.name}`;
+        
+        const { data, error } = await supabase.storage
+            .from('scienza') // Nome del bucket
+            .upload(filePath, file);
 
-            if (tempLayer) map.removeLayer(tempLayer);
-            tempLayer = L.geoJSON(tempData, { style: { color: color, weight: 3 } }).addTo(map);
-            map.fitBounds(tempLayer.getBounds());
-            alert("Anteprima caricata! Seleziona 'Pubblica' per salvare nel cloud.");
+        if (error) {
+            status.style.color = "red";
+            status.innerText = "Errore: " + error.message;
+        } else {
+            status.style.color = "green";
+            status.innerText = "File caricato con successo!";
+            listFiles(); // Aggiorna la lista
+        }
+    }
+
+    // Funzione per elencare i file caricati
+    async function listFiles() {
+        const fileListElement = document.getElementById('fileList');
+        fileListElement.innerHTML = "Caricamento lista...";
+
+        const { data, error } = await supabase.storage
+            .from('scienza')
+            .list('uploads', { limit: 100 });
+
+        if (error) {
+            fileListElement.innerHTML = "Errore nel recupero dei file.";
+            return;
+        }
+
+        fileListElement.innerHTML = "";
+        data.forEach(file => {
+            if (file.name === '.emptyFolderPlaceholder') return;
+            
+            const li = document.createElement('li');
+            li.className = 'file-item';
+            li.innerHTML = `
+                <span>${file.name}</span>
+                <button onclick="downloadFile('${file.name}')">Scarica</button>
+            `;
+            fileListElement.appendChild(li);
         });
+    }
 
-        // 3. SALVATAGGIO SU SUPABASE
-        async function saveToCloud() {
-            if (!tempData) return alert("Carica prima un file!");
-            if (prompt("Inserisci Password Amministratore:") !== ADMIN_PASS) return alert("Accesso negato!");
+    // Funzione per ottenere il link di download
+    async function downloadFile(fileName) {
+        const { data } = supabase.storage
+            .from('scienza')
+            .getPublicUrl(`uploads/${fileName}`);
+        
+        window.open(data.publicUrl, '_blank');
+    }
 
-            const color = document.getElementById('colorPicker').value;
-            const { error } = await _supabase.from('layers').insert([{ 
-                name: tempName, 
-                data: tempData, 
-                color: color 
-            }]);
+    // Inizializza la lista al caricamento della pagina
+    listFiles();
+</script>
 
-            if (error) {
-                alert("Errore nel salvataggio: " + error.message);
-            } else {
-                alert("Layer pubblicato con successo!");
-                location.reload();
-            }
-        }
-
-        // 4. ELIMINAZIONE LAYER
-        async function deleteLayer(id) {
-            if (prompt("Password per eliminare:") !== ADMIN_PASS) return alert("Azione annullata.");
-            const { error } = await _supabase.from('layers').delete().eq('id', id);
-            if (!error) location.reload();
-        }
-    </script>
 </body>
 </html>
