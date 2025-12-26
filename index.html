@@ -16,148 +16,102 @@
     <style>
         :root {
             --neon: #00ff9d;
-            --neon-glow: rgba(0, 255, 157, 0.3);
             --bg: #0a0c10;
             --panel: #111418;
             --text: #e0e0e0;
             --border: rgba(255, 255, 255, 0.1);
         }
 
-        * { box-sizing: border-box; transition: all 0.3s ease; }
-        body { background-color: var(--bg); color: var(--text); font-family: 'Exo 2', sans-serif; margin: 0; overflow-x: hidden; }
+        body { background-color: var(--bg); color: var(--text); font-family: 'Exo 2', sans-serif; margin: 0; }
 
-        .hero {
-            height: 200px;
-            background: linear-gradient(rgba(10,12,16,0.8), rgba(10,12,16,0.9)), 
-                        url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop');
-            background-size: cover; background-position: center;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; border-bottom: 1px solid var(--neon-glow);
+        .header {
+            padding: 20px;
+            background: linear-gradient(to bottom, #111, var(--bg));
+            text-align: center;
+            border-bottom: 1px solid var(--neon);
         }
 
-        /* Hex Grid */
-        .services-section { padding: 30px 0; text-align: center; }
-        .hex-grid { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
-        .hex-item { width: 120px; cursor: pointer; }
-        .hexagon {
-            width: 90px; height: 105px; background: var(--panel); margin: 0 auto;
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-            display: flex; align-items: center; justify-content: center; border: 1px solid var(--border);
-        }
-        .hexagon:hover { border-color: var(--neon); box-shadow: 0 0 15px var(--neon-glow); }
-        .hex-label { margin-top: 8px; font-size: 0.65rem; font-weight: bold; text-transform: uppercase; color: var(--neon); }
-
-        /* Dashboard */
-        .dashboard { max-width: 1200px; margin: 0 auto 50px auto; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-        .tab-bar { display: flex; background: #0d1116; border-bottom: 1px solid var(--border); }
-        .tab { padding: 15px 25px; cursor: pointer; font-size: 0.7rem; font-weight: bold; color: #8b949e; text-transform: uppercase; border-right: 1px solid var(--border); }
-        .tab.active { color: var(--neon); background: var(--panel); border-bottom: 2px solid var(--neon); }
-
-        .content-area { display: none; min-height: 600px; position: relative; }
-        .content-area.active { display: block; }
-
-        #map { height: 650px; width: 100%; background: #000; }
-
-        /* Controlli Mappa */
-        .map-controls {
-            position: absolute; top: 10px; left: 60px; z-index: 1000;
-            background: rgba(17, 20, 24, 0.9); padding: 15px; border-radius: 8px;
-            border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px;
-        }
+        .dashboard { max-width: 1200px; margin: 20px auto; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
         
+        .controls {
+            padding: 15px;
+            background: #161b22;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            border-bottom: 1px solid var(--border);
+        }
+
+        #map { height: 600px; width: 100%; background: #000; }
+
         .btn-neon {
             background: transparent; border: 1px solid var(--neon); color: var(--neon);
-            padding: 8px 12px; cursor: pointer; font-weight: bold; font-size: 0.7rem;
-            text-transform: uppercase; border-radius: 4px;
+            padding: 8px 15px; cursor: pointer; font-weight: bold; text-transform: uppercase; border-radius: 4px;
         }
         .btn-neon:hover { background: var(--neon); color: #000; }
 
-        .leaflet-control-layers { background: var(--panel) !important; color: #fff !important; border: 1px solid var(--neon) !important; }
-        
-        .layer-popup-btn {
-            background: #ff4444; color: white; border: none; padding: 5px 10px;
-            margin-top: 10px; cursor: pointer; border-radius: 4px; width: 100%;
-        }
+        .mission-section { padding: 30px; border-top: 1px solid var(--border); background: #0d1116; }
 
-        footer { padding: 40px; text-align: center; color: #555; font-size: 0.8rem; border-top: 1px solid var(--border); }
+        input[type="file"] { color: #8b949e; font-size: 0.8rem; }
+        
+        .leaflet-popup-content b { color: var(--neon); }
+        .popup-btn { background: #333; color: white; border: none; padding: 5px; margin: 2px; cursor: pointer; width: 100%; border-radius: 3px; }
     </style>
 </head>
 <body>
 
-    <section class="hero">
-        <h1>GIS PEAK</h1>
-        <p>Lab Geospaziale di Valerio Callaringi</p>
-    </section>
-
-    <section class="services-section">
-        <div class="hex-grid">
-            <div class="hex-item" onclick="switchTab(null, 'view-map')"><div class="hexagon"><i data-lucide="map" style="color:var(--neon)"></i></div><div class="hex-label">Mappa</div></div>
-            <div class="hex-item" onclick="switchTab(null, 'view-mission')"><div class="hexagon"><i data-lucide="target" style="color:var(--neon)"></i></div><div class="hex-label">Missione</div></div>
-            <div class="hex-item" onclick="switchTab(null, 'view-info')"><div class="hexagon"><i data-lucide="mail" style="color:var(--neon)"></i></div><div class="hex-label">Contatti</div></div>
-        </div>
-    </section>
+    <div class="header">
+        <h1 style="letter-spacing: 5px; margin: 0;">GIS PEAK</h1>
+        <p>Laboratorio Geologico di Valerio Callaringi</p>
+    </div>
 
     <div class="dashboard">
-        <div class="tab-bar">
-            <div id="tab-map" class="tab active" onclick="switchTab(event, 'view-map')">GIS Engine</div>
-            <div id="tab-mission" class="tab" onclick="switchTab(event, 'view-mission')">Missione</div>
-            <div id="tab-info" class="tab" onclick="switchTab(event, 'view-info')">Contatti</div>
-        </div>
-
-        <div id="view-map" class="content-area active">
-            <div class="map-controls">
-                <label style="font-size: 0.6rem; font-weight: bold;">IMPORTA (GPKG/ZIP/JSON)</label>
-                <input type="file" id="fileInput" accept=".geojson,.json,.zip,.gpkg" style="font-size: 0.7rem;">
-                <label style="font-size: 0.6rem; font-weight: bold;">COLORE LIVE</label>
-                <input type="color" id="colorPicker" value="#00ff9d" style="width: 100%; height: 30px; border: none; background: transparent;">
-                <button onclick="saveToCloud()" class="btn-neon">💾 PUBBLICA SUL CLOUD</button>
+        <div class="controls">
+            <div style="display: flex; flex-direction: column;">
+                <label style="font-size: 0.7rem; color: var(--neon);">CARICA FILE (.GPKG, .ZIP, .JSON)</label>
+                <input type="file" id="fileInput">
             </div>
-            <div id="map"></div>
+            <div style="display: flex; flex-direction: column;">
+                <label style="font-size: 0.7rem; color: var(--neon);">COLORE LAYER</label>
+                <input type="color" id="colorPicker" value="#00ff9d" style="height: 35px; border: none; background: none; cursor: pointer;">
+            </div>
+            <button onclick="saveToCloud()" class="btn-neon" style="margin-top: 15px;">💾 PUBBLICA SUL DATABASE</button>
         </div>
 
-        <div id="view-mission" class="content-area" style="padding:50px;">
-            <h2 style="color:var(--neon)">La Nostra Missione</h2>
-            <p>GIS PEAK è una piattaforma dedicata alla centralizzazione di dati cartografici complessi per la zona dei Monti Ernici e oltre.</p>
-            <p style="background: rgba(0,255,153,0.1); padding: 20px; border-left: 4px solid var(--neon);">
-                <strong>IMPORTANTE:</strong> Questo progetto è realizzato esclusivamente a scopo di <strong>divulgazione scientifica e non a scopo di lucro</strong>.
+        <div id="map"></div>
+
+        <div class="mission-section">
+            <h3 style="color: var(--neon); margin-top: 0;">MISSIONE DEL PROGETTO</h3>
+            <p>Questo portale è dedicato alla visualizzazione e archiviazione di dati geospaziali relativi alla tettonica e alla geologia regionale.</p>
+            <p style="border-left: 3px solid var(--neon); padding-left: 15px; font-style: italic;">
+                "La missione di questo progetto è esclusivamente a scopo di <strong>divulgazione scientifica</strong> e assolutamente <strong>non a scopo di lucro</strong>."
             </p>
-        </div>
-
-        <div id="view-info" class="content-area" style="padding:50px;">
-            <h2>Contatti</h2>
-            <p>Per collaborazioni scientifiche: <br><strong>callaringivalerio@gmail.com</strong></p>
         </div>
     </div>
 
-    <footer>© 2025 GIS PEAK | Sviluppato da Valerio Callaringi</footer>
-
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        const _supabase = supabase.createClient('https://nygybfkstkevlfkmaqxa.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55Z3liZmtzdGtldmxma21hcXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUyMzA3MDMsImV4cCI6MjA1MDgwNjcwM30.q77k26I5Y0B77O7fR977O7fR977O7fR977O7fR977O7fR977O7fR9');
+        // --- CONFIGURAZIONE DATABASE (INSERITA) ---
+        const SB_URL = "https://nygybfkstkevlfkmaqxa.supabase.co";
+        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55Z3liZmtzdGtldmxma21hcXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUyMzA3MDMsImV4cCI6MjA1MDgwNjcwM30.q77k26I5Y0B77O7fR977O7fR977O7fR977O7fR977O7fR977O7fR9";
+        const _supabase = supabase.createClient(SB_URL, SB_KEY);
         const ADMIN_PASS = "Valerio_1991";
 
         lucide.createIcons();
 
-        // Setup Mappa
+        // Inizializza Mappa
         const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
         const map = L.map('map', { center: [41.83, 13.33], zoom: 12, layers: [satellite] });
-
-        // Pannello Layer (Accendi/Spegni)
         const layerControl = L.control.layers({ "Satellite": satellite }, {}, { collapsed: false }).addTo(map);
-
-        // Carte ISPRA WMS
-        const geologia = L.tileLayer.wms("https://sgi2.isprambiente.it/arcgis/services/servizi/cartografia_geologica_50k/MapServer/WMSServer", {
-            layers: '0', format: 'image/png', transparent: true, attribution: "ISPRA"
-        });
-        layerControl.addOverlay(geologia, "Carta Geologica (ISPRA)");
 
         let tempLayer = null;
         let tempData = null;
         let tempName = "";
 
-        // Funzione per caricare Layer dal DB
-        async function loadStoredLayers() {
-            const { data } = await _supabase.from('layers').select('*');
+        // 1. CARICA LAYER DAL CLOUD
+        async function loadLayers() {
+            const { data, error } = await _supabase.from('layers').select('*');
             if (data) {
                 data.forEach(item => {
                     const l = L.geoJSON(item.data, {
@@ -165,19 +119,19 @@
                         onEachFeature: (f, layer) => {
                             layer.bindPopup(`
                                 <b>Layer: ${item.name}</b><br>
-                                <button onclick="map.fitBounds(this.layer.getBounds())" class="layer-popup-btn" style="background:var(--neon); color:#000;">ZOOM QUI</button>
-                                <button onclick="deleteStoredLayer('${item.id}')" class="layer-popup-btn">ELIMINA DAL CLOUD</button>
+                                <button class="popup-btn" onclick="map.fitBounds(this.options.layer.getBounds())">🔍 ZOOM QUI</button>
+                                <button class="popup-btn" style="background:#800;" onclick="deleteLayer('${item.id}')">🗑️ ELIMINA</button>
                             `);
-                            layer.getPopup().layer = layer; // Riferimento per lo zoom
+                            layer.getPopup().options.layer = layer;
                         }
                     }).addTo(map);
-                    layerControl.addOverlay(l, `🌍 ${item.name}`);
+                    layerControl.addOverlay(l, "🌍 " + item.name);
                 });
             }
         }
-        loadStoredLayers();
+        loadLayers();
 
-        // Gestore File (GPKG, ZIP, JSON)
+        // 2. GESTIONE IMPORTAZIONE FILE
         document.getElementById('fileInput').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             tempName = file.name;
@@ -188,45 +142,23 @@
                 const gp = await window.geopackage.GeoPackageConnection.connectWithUint8Array(new Uint8Array(buffer));
                 const tables = await gp.getFeatureTables();
                 tempData = await gp.getFeaturesFromFeatureTable(tables[0]);
-                processLayer(tempData, color);
             } else if (file.name.endsWith('.zip')) {
-                const reader = new FileReader();
-                reader.onload = async (ev) => {
-                    tempData = await shp(ev.target.result);
-                    processLayer(tempData, color);
-                };
-                reader.readAsArrayBuffer(file);
+                tempData = await shp(await file.arrayBuffer());
             } else {
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    tempData = JSON.parse(ev.target.result);
-                    processLayer(tempData, color);
-                };
-                reader.readAsText(file);
+                tempData = JSON.parse(await file.text());
             }
-        });
 
-        function processLayer(data, color) {
             if (tempLayer) map.removeLayer(tempLayer);
-            tempLayer = L.geoJSON(data, {
-                style: { color: color, weight: 3, fillOpacity: 0.4 }
-            }).addTo(map);
+            tempLayer = L.geoJSON(tempData, { style: { color: color, weight: 3 } }).addTo(map);
             map.fitBounds(tempLayer.getBounds());
-            layerControl.addOverlay(tempLayer, `📝 Anteprima: ${tempName}`);
-            alert("File caricato! Puoi cambiare colore o pubblicarlo.");
-        }
-
-        // Funzione Cambio Colore in Tempo Reale
-        document.getElementById('colorPicker').addEventListener('input', (e) => {
-            if (tempLayer) {
-                tempLayer.setStyle({ color: e.target.value });
-            }
+            alert("Anteprima caricata! Seleziona 'Pubblica' per salvare nel cloud.");
         });
 
+        // 3. SALVATAGGIO SU SUPABASE
         async function saveToCloud() {
             if (!tempData) return alert("Carica prima un file!");
-            if (prompt("Password Amministratore:") !== ADMIN_PASS) return alert("Password errata!");
-            
+            if (prompt("Inserisci Password Amministratore:") !== ADMIN_PASS) return alert("Accesso negato!");
+
             const color = document.getElementById('colorPicker').value;
             const { error } = await _supabase.from('layers').insert([{ 
                 name: tempName, 
@@ -234,22 +166,19 @@
                 color: color 
             }]);
 
+            if (error) {
+                alert("Errore nel salvataggio: " + error.message);
+            } else {
+                alert("Layer pubblicato con successo!");
+                location.reload();
+            }
+        }
+
+        // 4. ELIMINAZIONE LAYER
+        async function deleteLayer(id) {
+            if (prompt("Password per eliminare:") !== ADMIN_PASS) return alert("Azione annullata.");
+            const { error } = await _supabase.from('layers').delete().eq('id', id);
             if (!error) location.reload();
-            else alert("Errore nel salvataggio.");
-        }
-
-        async function deleteStoredLayer(id) {
-            if (prompt("Password per eliminare:") !== ADMIN_PASS) return alert("Negato!");
-            await _supabase.from('layers').delete().eq('id', id);
-            location.reload();
-        }
-
-        function switchTab(e, viewId) {
-            document.querySelectorAll('.content-area').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
-            if (e) e.currentTarget.classList.add('active');
-            if (viewId === 'view-map') setTimeout(() => map.invalidateSize(), 200);
         }
     </script>
 </body>
