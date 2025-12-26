@@ -2,64 +2,120 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Archivio Scientifico No-Profit</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archivio Scientifico Aperto</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; line-height: 1.6; }
-        .card { border: 1px solid #ddd; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .mission { color: #2c3e50; font-weight: bold; margin-bottom: 20px; border-left: 4px solid #3498db; padding-left: 10px; }
-        button { background: #3498db; color: white; border: none; padding: 10px; cursor: pointer; border-radius: 5px; width: 100%; }
-        #status { margin-top: 15px; font-size: 0.9em; }
+        :root { --primary: #2c3e50; --accent: #3498db; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f8f9fa; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h1 { color: var(--primary); text-align: center; border-bottom: 3px solid var(--accent); padding-bottom: 10px; }
+        .mission-box { background: #e8f4fd; border-left: 5px solid var(--accent); padding: 15px; margin-bottom: 25px; font-style: italic; }
+        .section { margin-bottom: 30px; padding: 20px; border: 1px solid #eee; border-radius: 8px; }
+        input[type="file"] { display: block; margin-bottom: 15px; width: 100%; }
+        button { background: var(--accent); color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #2980b9; }
+        #status { margin-top: 15px; text-align: center; font-weight: bold; }
+        .file-list { margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px; }
+        .file-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #fafafa; font-size: 0.9em; }
+        .download-btn { width: auto; padding: 5px 10px; background: #27ae60; font-size: 0.8em; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <div class="mission">Missione: Divulgazione Scientifica No-Profit</div>
-    <h3>Caricamento Documenti</h3>
-    <input type="file" id="fileInput" id="uploadBtn" style="margin-bottom: 15px;">
-    <button onclick="upload()">Salva nel Database Scientifico</button>
-    <div id="status"></div>
+<div class="container">
+    <h1>Divulgazione Scientifica</h1>
+    
+    <div class="mission-box">
+        <strong>Missione:</strong> Questo portale è dedicato alla condivisione di conoscenze scientifiche a scopo divulgativo e non a scopo di lucro.
+    </div>
+
+    <div class="section">
+        <h3>Carica un Documento</h3>
+        <input type="file" id="fileInput">
+        <button onclick="uploadFile()">Salva nell'Archivio</button>
+        <div id="status"></div>
+    </div>
+
+    <div class="section">
+        <h3>Documenti Disponibili</h3>
+        <div id="fileList" class="file-list">
+            </div>
+    </div>
 </div>
 
 <script>
-    // Configurazione diretta
-    const _URL = "https://nygybfkstkevlfkmaqxa.supabase.co";
-    const _KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55Z3liZmtzdGtldmxma21hcXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY3NDUxMTAsImV4cCI6MjA4MjMyMTExMH0.aMvF_FneySS0-84Ts7VQlnoivfmUPUO4s8o-AK4KTJU";
+    // Configurazione Supabase
+    const SB_URL = "https://nygybfkstkevlfkmaqxa.supabase.co";
+    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55Z3liZmtzdGtldmxma21hcXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY3NDUxMTAsImV4cCI6MjA4MjMyMTExMH0.aMvF_FneySS0-84Ts7VQlnoivfmUPUO4s8o-AK4KTJU";
 
-    const supabaseClient = supabase.createClient(_URL, _KEY);
+    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-    async function upload() {
+    // 1. Funzione per Caricare i File
+    async function uploadFile() {
         const fileInput = document.getElementById('fileInput');
         const status = document.getElementById('status');
         const file = fileInput.files[0];
 
         if (!file) {
-            status.innerText = "❌ Seleziona un file prima.";
+            status.innerHTML = "❌ Seleziona un file.";
             return;
         }
 
-        status.style.color = "black";
-        status.innerText = "⏳ Collegamento in corso...";
+        status.style.color = "blue";
+        status.innerHTML = "⏳ Caricamento in corso...";
 
-        try {
-            // Caricamento nel bucket 'scienza'
-            const fileName = `${Date.now()}_${file.name}`;
-            const { data, error } = await supabaseClient.storage
-                .from('scienza')
-                .upload(fileName, file);
+        const fileName = `${Date.now()}_${file.name}`;
 
-            if (error) throw error;
+        const { data, error } = await supabaseClient.storage
+            .from('scienza')
+            .upload(fileName, file);
 
-            status.style.color = "green";
-            status.innerText = "✅ Successo! Il file è stato salvato nell'archivio.";
-        } catch (err) {
-            console.error(err);
+        if (error) {
+            console.error(error);
             status.style.color = "red";
-            // Se l'errore persiste, mostriamo il messaggio tecnico per capire meglio
-            status.innerText = "❌ Errore: " + err.message;
+            status.innerHTML = "❌ Errore: " + error.message;
+        } else {
+            status.style.color = "green";
+            status.innerHTML = "✅ File salvato con successo!";
+            fileInput.value = ""; // Reset input
+            loadFiles(); // Ricarica la lista
         }
     }
+
+    // 2. Funzione per Elencare i File
+    async function loadFiles() {
+        const fileListDiv = document.getElementById('fileList');
+        
+        const { data, error } = await supabaseClient.storage
+            .from('scienza')
+            .list('', { limit: 20, sortBy: { column: 'created_at', order: 'desc' } });
+
+        if (error) {
+            fileListDiv.innerHTML = "Errore nel caricamento dei file.";
+            return;
+        }
+
+        fileListDiv.innerHTML = "";
+        data.forEach(file => {
+            if (file.name === '.emptyFolderPlaceholder') return;
+
+            const item = document.createElement('div');
+            item.className = 'file-item';
+            
+            // Genera URL pubblico per il download
+            const { data: urlData } = supabaseClient.storage.from('scienza').getPublicUrl(file.name);
+
+            item.innerHTML = `
+                <span>${file.name}</span>
+                <button class="download-btn" onclick="window.open('${urlData.publicUrl}', '_blank')">Apri/Scarica</button>
+            `;
+            fileListDiv.appendChild(item);
+        });
+    }
+
+    // Carica la lista all'apertura della pagina
+    loadFiles();
 </script>
 
 </body>
