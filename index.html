@@ -9,6 +9,10 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shpjs/4.0.4/shp.min.js"></script>
+    <script src="https://unpkg.com/@ngageoint/geopackage@4.2.3/dist/geopackage.min.js"></script>
+    
     <style>
         :root {
             --neon: #00ff9d;
@@ -22,215 +26,228 @@
         * { box-sizing: border-box; transition: all 0.3s ease; }
         body { background-color: var(--bg); color: var(--text); font-family: 'Exo 2', sans-serif; margin: 0; overflow-x: hidden; }
 
-        /* Header Hero */
+        /* Hero Section */
         .hero {
-            height: 300px;
+            height: 250px;
             background: linear-gradient(rgba(10,12,16,0.8), rgba(10,12,16,0.9)), 
                         url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop');
             background-size: cover; background-position: center;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             text-align: center; border-bottom: 1px solid var(--neon-glow);
         }
-        .hero h1 { font-size: 3rem; letter-spacing: 5px; margin: 0; color: #fff; text-transform: uppercase; }
-        .hero p { opacity: 0.8; letter-spacing: 2px; margin-top: 10px; }
+        .hero h1 { font-size: 3rem; letter-spacing: 5px; margin: 0; color: #fff; text-transform: uppercase; text-shadow: 0 0 15px var(--neon-glow); }
 
-        /* Hexagon Grid Section (RIPRISTINATA) */
-        .services-section { padding: 40px 0; text-align: center; }
-        .hex-grid { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; padding: 0 20px; }
-        .hex-item { width: 180px; cursor: pointer; }
+        /* Hexagon Grid */
+        .services-section { padding: 30px 0; text-align: center; }
+        .hex-grid { display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; padding: 0 20px; }
+        .hex-item { width: 150px; cursor: pointer; }
         .hexagon {
-            width: 120px; height: 140px;
+            width: 100px; height: 115px;
             background: var(--panel); margin: 0 auto;
             clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
             display: flex; align-items: center; justify-content: center;
             border: 1px solid var(--border);
         }
-        .hexagon:hover { border-color: var(--neon); box-shadow: 0 0 20px var(--neon-glow); transform: translateY(-5px); }
-        .hex-icon { color: var(--neon); width: 35px; height: 35px; }
-        .hex-label { margin-top: 10px; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
+        .hexagon:hover { border-color: var(--neon); box-shadow: 0 0 15px var(--neon-glow); transform: translateY(-5px); }
+        .hex-icon { color: var(--neon); width: 30px; height: 30px; }
+        .hex-label { margin-top: 10px; font-weight: 600; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 1px; color: var(--text); }
 
-        /* Dashboard & Tabs */
-        .dashboard { max-width: 1100px; margin: 20px auto 60px auto; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        /* Dashboard */
+        .dashboard { max-width: 1100px; margin: 10px auto 50px auto; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
         .tab-bar { display: flex; background: #0d1116; border-bottom: 1px solid var(--border); overflow-x: auto; }
         .tab { padding: 15px 20px; cursor: pointer; font-size: 0.7rem; font-weight: bold; color: #8b949e; border-right: 1px solid var(--border); white-space: nowrap; text-transform: uppercase; }
         .tab.active { color: var(--neon); background: var(--panel); border-bottom: 2px solid var(--neon); }
 
-        .content-area { padding: 30px; display: none; min-height: 450px; }
-        .content-area.active { display: block; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .content-area { padding: 0; display: none; min-height: 450px; }
+        .content-area.active { display: block; }
 
-        #map { height: 450px; width: 100%; background: #000; }
-        input, textarea { background: #0a0c10; border: 1px solid #30363d; color: white; padding: 12px; border-radius: 4px; width: 100%; margin-bottom: 15px; font-family: inherit; }
+        #map { height: 550px; width: 100%; background: #000; }
         
-        .btn-neon { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 10px 25px; cursor: pointer; font-weight: bold; text-transform: uppercase; border-radius: 4px; text-decoration: none; display: inline-block; font-size: 0.8rem; }
+        /* Pannello Layer Dark */
+        .leaflet-control-layers { background: #111418 !important; color: white !important; border: 1px solid var(--neon) !important; font-family: 'Exo 2', sans-serif; padding: 10px !important; }
+
+        .controls { padding: 15px; background: #161b22; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border); }
+        .btn-neon { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 8px 15px; cursor: pointer; font-weight: bold; text-transform: uppercase; border-radius: 4px; font-size: 0.7rem; }
         .btn-neon:hover { background: var(--neon); color: #000; box-shadow: 0 0 15px var(--neon); }
-        .tut-card { border: 1px solid var(--border); padding: 20px; border-radius: 8px; margin-bottom: 15px; background: rgba(255,255,255,0.02); }
 
-        /* Modals */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 3000; }
-        .modal { background: var(--panel); width: 90%; max-width: 500px; border: 1px solid var(--neon); padding: 40px; border-radius: 8px; position: relative; text-align: center; }
-        .close-modal { position: absolute; top: 20px; right: 20px; color: var(--neon); cursor: pointer; }
-
-        footer { padding: 40px 20px; text-align: center; border-top: 1px solid var(--border); margin-top: 40px; font-size: 0.8rem; color: #666; }
-        #disqus_thread { background: #f9f9f9; padding: 20px; border-radius: 8px; margin-top: 10px; }
+        input, textarea { background: #0a0c10; border: 1px solid #30363d; color: white; padding: 12px; border-radius: 4px; width: 100%; margin-bottom: 15px; font-family: inherit; }
+        footer { padding: 30px; text-align: center; border-top: 1px solid var(--border); font-size: 0.8rem; color: #666; }
     </style>
 </head>
 <body>
 
     <section class="hero">
         <h1>GIS PEAK</h1>
-        <p>Progetto di <strong>Valerio Callaringi</strong></p>
-        <p style="font-size: 0.8rem; opacity: 0.6;">Laboratorio di Divulgazione Scientifica Geospaziale</p>
+        <p>Lab Geospaziale di <strong>Valerio Callaringi</strong></p>
     </section>
 
     <section class="services-section">
         <div class="hex-grid">
-            <div class="hex-item" onclick="openModal('m-analisi')">
-                <div class="hexagon"><i data-lucide="brain-circuit" class="hex-icon"></i></div>
-                <div class="hex-label">Analisi</div>
+            <div class="hex-item" onclick="switchTab(null, 'view-map')">
+                <div class="hexagon"><i data-lucide="map" class="hex-icon"></i></div>
+                <div class="hex-label">Mappa Live</div>
             </div>
-            <div class="hex-item" onclick="openModal('m-web')">
-                <div class="hexagon"><i data-lucide="globe-2" class="hex-icon"></i></div>
-                <div class="hex-label">WebGIS</div>
+            <div class="hex-item" onclick="switchTab(null, 'view-academy')">
+                <div class="hexagon"><i data-lucide="graduation-cap" class="hex-icon"></i></div>
+                <div class="hex-label">Academy</div>
             </div>
-            <div class="hex-item" onclick="openModal('m-drone')">
-                <div class="hexagon"><i data-lucide="navigation" class="hex-icon"></i></div>
-                <div class="hex-label">Rilievi</div>
+            <div class="hex-item" onclick="switchTab(null, 'view-forum')">
+                <div class="hexagon"><i data-lucide="message-square" class="hex-icon"></i></div>
+                <div class="hex-label">Forum</div>
+            </div>
+            <div class="hex-item" onclick="switchTab(null, 'view-info')">
+                <div class="hexagon"><i data-lucide="mail" class="hex-icon"></i></div>
+                <div class="hex-label">Contatti</div>
             </div>
         </div>
     </section>
 
     <div class="dashboard">
         <div class="tab-bar">
-            <div class="tab active" onclick="switchTab(event, 'view-map')">Mappa</div>
-            <div class="tab" onclick="switchTab(event, 'view-academy')">Academy</div>
-            <div class="tab" onclick="switchTab(event, 'view-forum')">Forum</div>
-            <div class="tab" onclick="switchTab(event, 'view-mission')">Missione</div>
-            <div class="tab" onclick="switchTab(event, 'view-info')">Contatti</div>
-            <div class="tab" onclick="switchTab(event, 'view-login')">Login</div>
+            <div id="tab-map" class="tab active" onclick="switchTab(event, 'view-map')">GIS Engine</div>
+            <div id="tab-academy" class="tab" onclick="switchTab(event, 'view-academy')">Academy</div>
+            <div id="tab-forum" class="tab" onclick="switchTab(event, 'view-forum')">Forum</div>
+            <div id="tab-mission" class="tab" onclick="switchTab(event, 'view-mission')">Missione</div>
+            <div id="tab-info" class="tab" onclick="switchTab(event, 'view-info')">Contatti</div>
         </div>
 
-        <div id="view-map" class="content-area active" style="padding:0">
-            <div style="padding:15px; background: #161b22; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+        <div id="view-map" class="content-area active">
+            <div class="controls">
                 <div>
-                    <span style="font-size:0.7rem; color:var(--neon); font-weight: bold;">CARICA GEOJSON:</span>
-                    <input type="file" id="fileInput" accept=".geojson,.json" style="width:auto; border:none; background:transparent; font-size: 0.8rem; color: white;">
+                    <span style="font-size:0.7rem; color:var(--neon); font-weight: bold; margin-right:10px;">IMPORTA (JSON/ZIP/GPKG):</span>
+                    <input type="file" id="fileInput" accept=".geojson,.json,.zip,.gpkg" style="font-size: 0.7rem; color: white; width: auto;">
                 </div>
-                <button onclick="getLocation()" class="btn-neon" style="padding: 5px 10px; font-size: 0.7rem;">📍 GPS</button>
+                <button onclick="saveToCloud()" class="btn-neon">💾 PUBBLICA PER LA COMMUNITY</button>
             </div>
             <div id="map"></div>
         </div>
 
-        <div id="view-academy" class="content-area">
+        <div id="view-academy" class="content-area" style="padding:40px;">
             <h2 style="color:var(--neon)">GIS Academy</h2>
-            <div class="tut-card">
-                <h4>Introduzione ai Sistemi Informativi Geografici</h4>
-                <p style="opacity:0.7; font-size:0.9rem;">Impara le basi di QGIS e la gestione dei database spaziali.</p>
-                <button class="btn-neon">Leggi Tutorial</button>
-            </div>
+            <p>Benvenuto nell'area formativa. Qui troverai dispense su QGIS, PostGIS e Python.</p>
         </div>
 
-        <div id="view-forum" class="content-area">
-            <h2 style="color:var(--neon)">Forum Community</h2>
-            <p>Loggati tramite Disqus per partecipare alle discussioni.</p>
+        <div id="view-forum" class="content-area" style="padding:40px;">
             <div id="disqus_thread"></div>
         </div>
 
-        <div id="view-mission" class="content-area">
-            <h2 style="color:var(--neon)">No-Profit</h2>
-            <div class="tut-card" style="border-left: 4px solid var(--neon);">
-                <p><strong>GIS PEAK</strong> è un portale creato da <strong>Valerio Callaringi</strong>.</p>
-                <p>Questo sito non ha scopi commerciali. È dedicato esclusivamente alla divulgazione scientifica e alla condivisione di conoscenze tecniche nel campo GIS.</p>
-            </div>
+        <div id="view-mission" class="content-area" style="padding:40px;">
+            <h2 style="color:var(--neon)">Missione</h2>
+            <p>GIS PEAK nasce per rendere i dati geografici permanenti e accessibili a tutti i collaboratori.</p>
         </div>
 
-        <div id="view-info" class="content-area">
-            <h2 style="color:var(--neon)">Contatta Valerio</h2>
-            <form id="contactForm">
-                <input type="text" id="senderName" placeholder="Tuo Nome" required>
-                <textarea id="senderMsg" rows="5" placeholder="Scrivi qui..." required></textarea>
-                <button type="submit" class="btn-neon">Invia Messaggio</button>
-            </form>
-        </div>
-
-        <div id="view-login" class="content-area">
-            <div style="max-width:350px; margin: 40px auto; text-align: center;">
-                <h3 style="color:var(--neon)">Accesso Collaboratori</h3>
-                <input type="text" placeholder="Username">
-                <input type="password" placeholder="Password">
-                <button class="btn-neon" style="width:100%" onclick="alert('Area riservata agli amministratori.')">Entra</button>
-            </div>
+        <div id="view-info" class="content-area" style="padding:40px;">
+            <h2 style="color:var(--neon)">Contatti</h2>
+            <input type="text" id="cName" placeholder="Tuo Nome">
+            <textarea id="cMsg" placeholder="Messaggio..."></textarea>
+            <button class="btn-neon" onclick="alert('Inviato a callaringivalerio@gmail.com')">Invia Mail</button>
         </div>
     </div>
 
     <footer>
-        <p>© 2025 GIS PEAK | Sviluppato da <strong>Valerio Callaringi</strong></p>
-        <p style="opacity: 0.5;">Divulgazione Scientifica - Nessun fine di lucro.</p>
+        <p>© 2025 GIS PEAK | Sviluppato da Valerio Callaringi</p>
     </footer>
-
-    <div id="m-analisi" class="modal-overlay" onclick="closeModals()"><div class="modal"><i data-lucide="x" class="close-modal" onclick="closeModals()"></i><h2 style="color:var(--neon)">Analisi</h2><p>Strumenti per il geoprocessing e l'analisi spaziale dei dati.</p></div></div>
-    <div id="m-web" class="modal-overlay" onclick="closeModals()"><div class="modal"><i data-lucide="x" class="close-modal" onclick="closeModals()"></i><h2 style="color:var(--neon)">WebGIS</h2><p>Sviluppo di mappe interattive dinamiche su browser.</p></div></div>
-    <div id="m-drone" class="modal-overlay" onclick="closeModals()"><div class="modal"><i data-lucide="x" class="close-modal" onclick="closeModals()"></i><h2 style="color:var(--neon)">Rilievi</h2><p>Integrazione dati da drone, fotogrammetria e rilievi GPS.</p></div></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // CONFIGURAZIONE FINALE
+        const _supabase = supabase.createClient('https://nygybfkstkevlfkmaqxa.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55Z3liZmtzdGtldmxma21hcXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUyMzA3MDMsImV4cCI6MjA1MDgwNjcwM30.q77k26I5Y0B77O7fR977O7fR977O7fR977O7fR977O7fR977O7fR9');
+        const ADMIN_PASS = "Valerio_1991";
+
         lucide.createIcons();
-
-        // Mappa
-        const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Esri' });
-        const dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: 'CARTO' });
+        
+        // Setup Mappa e Controllo Layer
+        const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
+        const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{y}/{x}.png');
         const map = L.map('map', { center: [41.9, 12.5], zoom: 6, layers: [satellite] });
-        L.control.layers({ "Satellite": satellite, "Mappa Scura": dark }).addTo(map);
 
-        function getLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((pos) => {
-                    map.setView([pos.coords.latitude, pos.coords.longitude], 16);
-                    L.marker([pos.coords.latitude, pos.coords.longitude]).addTo(map).bindPopup("Sei qui").openPopup();
+        const layerControl = L.control.layers({ "Satellite": satellite, "OSM": osm }, {}, { collapsed: false }).addTo(map);
+
+        let tempLayerData = null;
+        let tempFileName = "";
+
+        // Caricamento iniziale dal Database
+        async function init() {
+            const { data } = await _supabase.from('layers').select('*');
+            if (data) {
+                data.forEach(item => {
+                    const l = L.geoJSON(item.data, {
+                        style: { color: '#00ff9d', weight: 2, fillOpacity: 0.3 },
+                        onEachFeature: (f, layer) => {
+                            layer.bindPopup(`<b>Layer:</b> ${item.name}<br><button onclick="deleteLayer('${item.id}')" style="background:red;color:white;border:none;padding:5px;margin-top:5px;cursor:pointer;">ELIMINA</button>`);
+                        }
+                    }).addTo(map);
+                    layerControl.addOverlay(l, `🌍 ${item.name}`);
                 });
             }
+        }
+        init();
+
+        // Gestore File (GeoJSON, SHP ZIP, GPKG)
+        document.getElementById('fileInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            tempFileName = file.name;
+
+            if (file.name.endsWith('.gpkg')) {
+                const buffer = await file.arrayBuffer();
+                const gp = await window.geopackage.GeoPackageConnection.connectWithUint8Array(new Uint8Array(buffer));
+                const tables = await gp.getFeatureTables();
+                tempLayerData = await gp.getFeaturesFromFeatureTable(tables[0]);
+                showPreview();
+            } else if (file.name.endsWith('.zip')) {
+                const reader = new FileReader();
+                reader.onload = async (ev) => {
+                    tempLayerData = await shp(ev.target.result);
+                    showPreview();
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    tempLayerData = JSON.parse(ev.target.result);
+                    showPreview();
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function showPreview() {
+            const p = L.geoJSON(tempLayerData, { style: { color: '#ff00ff', weight: 3 } }).addTo(map);
+            layerControl.addOverlay(p, `📝 Anteprima: ${tempFileName}`);
+            map.fitBounds(p.getBounds());
+            alert("File pronto! Usa la password per pubblicare.");
+        }
+
+        async function saveToCloud() {
+            if (!tempLayerData) return alert("Seleziona un file!");
+            if (prompt("Password Amministratore:") !== ADMIN_PASS) return alert("Password errata!");
+
+            const { error } = await _supabase.from('layers').insert([{ name: tempFileName, data: tempLayerData }]);
+            if (!error) location.reload();
+        }
+
+        async function deleteLayer(id) {
+            if (prompt("Password per eliminare:") !== ADMIN_PASS) return alert("Negato!");
+            await _supabase.from('layers').delete().eq('id', id);
+            location.reload();
         }
 
         function switchTab(e, viewId) {
             document.querySelectorAll('.content-area').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
-            e.currentTarget.classList.add('active');
+            
+            const tabId = 'tab-' + viewId.split('-')[1];
+            if(document.getElementById(tabId)) document.getElementById(tabId).classList.add('active');
             if(viewId === 'view-map') setTimeout(() => map.invalidateSize(), 200);
         }
 
-        document.getElementById('contactForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const name = document.getElementById('senderName').value;
-            const msg = document.getElementById('senderMsg').value;
-            window.location.href = `mailto:callaringivalerio@gmail.com?subject=Contatto da ${name}&body=${encodeURIComponent(msg)}`;
-        });
-
-        // Disqus Forum
+        // Disqus
         (function() {
             var d = document, s = d.createElement('script');
-            s.src = 'https://gis-peak-valerio.disqus.com/embed.js'; 
-            s.setAttribute('data-timestamp', +new Date());
+            s.src = 'https://gis-peak-valerio.disqus.com/embed.js';
             (d.head || d.body).appendChild(s);
         })();
-
-        // GeoJSON loader
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                const data = JSON.parse(ev.target.result);
-                const layer = L.geoJSON(data, {
-                    style: { color: '#00ff9d', weight: 3, fillOpacity: 0.3 },
-                    onEachFeature: (f, l) => { if(f.properties) l.bindPopup(JSON.stringify(f.properties, null, 2)); }
-                }).addTo(map);
-                map.fitBounds(layer.getBounds());
-            };
-            reader.readAsText(file);
-        });
-
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
     </script>
 </body>
 </html>
